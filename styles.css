@@ -774,7 +774,7 @@ h1 em, h2 em, h3 em, .about-lede em { font-style: italic; color: var(--accent); 
 
 /* Images that must be shown whole (photo collages, figures) */
 .project-media.media-contain { background: #fff; }
-.project-media.media-contain > img { object-fit: contain; padding: clamp(10px, 2vw, 24px); }
+.project-media.media-contain > img { object-fit: contain; padding: clamp(34px, 4vw, 44px) clamp(14px, 2.5vw, 28px) clamp(12px, 2vw, 24px); }
 .project:hover .project-media.media-contain > img { transform: scale(1.02); }
 
 @media (max-width: 900px) {
