@@ -15,7 +15,7 @@ script.js         navigation, scroll reveals, card interactions and the hero gar
 assets/
   cv/             public CV (PDF, references "available upon request")
   img/            portrait, project visuals, link-preview image (og-image.jpg)
-  media/          Blender animation shown on hover in the projects section
+  media/          looping protein animation shown on hover in the projects section
   favicon.svg
 .nojekyll         tells GitHub Pages to serve the files as they are
 ```

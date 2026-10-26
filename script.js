@@ -1264,9 +1264,10 @@
         cStem: color(hue - 6, sat - 4, lit + 12, haze),
         cStemHi: color(hue - 12, sat - 10, lit + 28, haze, 0.55),
         cStemLo: color(hue + 6, sat, lit - 6, haze, 0.4),
-        cTube: color(80, 22, 80, haze),
+        cCalyx: color(hue - 4, sat, lit + 6, haze),
+        cTube: color(78, 24, 88, haze),
         cPetal: color(70, 25, 97, haze * 0.8),
-        cPetalEdge: color(85, 12, 50, haze, 0.45),
+        cPetalEdge: color(85, 10, 72, haze, 0.55),
       };
       // Leaves spiral up the stem at the golden angle. Internodes are short at the base and
       // lengthen upward; the big lower leaves sit on long petioles and droop, the upper ones
@@ -1291,7 +1292,7 @@
       P.leaves.sort((a, b) => a.depth - b.depth);
       const nf = 1 + Math.floor(rand() * 3);
       for (let i = 0; i < nf; i++) {
-        P.flowers.push({ at: 0.92 + i * 0.025, side: i % 2 ? 1 : -1, off: 0.4 + rand() * 0.5, tube: s * (10 + rand() * 5), size: s * (4.5 + rand() * 1.5), spin: rand() * TAU });
+        P.flowers.push({ at: 0.9 + i * 0.03, side: i % 2 ? 1 : -1, off: 0.45 + rand() * 0.45, tube: s * (17 + rand() * 6), size: s * (5 + rand() * 1.5), tilt: 0.22 + rand() * 0.18 });
       }
       return P;
     }
@@ -1326,38 +1327,73 @@
       drawStalk(ctx, st, P.cStem, st.g, P.cStemHi, P.cStemLo);
       for (const L of P.leaves) if (L.depth >= 0) drawBenthLeaf(ctx, P, L);
 
-      // Long white tubular flowers at the top.
+      // Trumpet flowers at the apex, seen from the side: green calyx, long narrow white
+      // corolla tube, and the flat five-lobed limb at its mouth seen edge-on.
       const k = ease((st.g - 0.8) / 0.2);
       if (k <= 0) return;
+      const s = P.s;
       for (const F of P.flowers) {
         sampleStalk(st, F.at, tmp);
-        const a = tmp.a + F.side * F.off;
-        const ex = tmp.x + Math.sin(a) * F.tube * k;
-        const ey = tmp.y - Math.cos(a) * F.tube * k;
-        ctx.beginPath();
-        ctx.moveTo(tmp.x, tmp.y);
-        ctx.lineTo(ex, ey);
-        ctx.strokeStyle = P.cTube;
-        ctx.lineWidth = 1.6 * P.s;
-        ctx.stroke();
+        const a = tmp.a + F.side * (F.off + F.tilt);
+        const L = F.tube * k;
         const r = F.size * k;
         ctx.save();
-        ctx.translate(ex, ey);
-        ctx.rotate(a + F.spin);
-        ctx.scale(1, 0.7);
+        ctx.translate(tmp.x, tmp.y);
+        ctx.rotate(a);                       // local -y runs along the tube
+        // pedicel and calyx
         ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -L * 0.12);
+        ctx.strokeStyle = P.cStem;
+        ctx.lineWidth = 0.9 * s;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-0.6 * s, -L * 0.1);
+        ctx.quadraticCurveTo(-2.1 * s, -L * 0.2, -1.2 * s, -L * 0.3);
+        ctx.lineTo(1.2 * s, -L * 0.3);
+        ctx.quadraticCurveTo(2.1 * s, -L * 0.2, 0.6 * s, -L * 0.1);
+        ctx.closePath();
+        ctx.fillStyle = P.cCalyx;
+        ctx.fill();
+        // corolla tube, widening slightly towards the mouth
+        ctx.beginPath();
+        ctx.moveTo(-0.75 * s, -L * 0.26);
+        ctx.lineTo(-1.15 * s, -L * 0.95);
+        ctx.quadraticCurveTo(0, -L * 0.98, 1.15 * s, -L * 0.95);
+        ctx.lineTo(0.75 * s, -L * 0.26);
+        ctx.closePath();
+        ctx.fillStyle = P.cTube;
+        ctx.fill();
+        // limb: the tube flares into five lobes; seen from the side it is a shallow trumpet
+        const m = -L * 0.93;                 // where the flare starts
+        const e = r * 0.34;                  // foreshortened depth of the open face
+        ctx.beginPath();
+        ctx.moveTo(-1.1 * s, m);
+        ctx.quadraticCurveTo(-1.4 * s, -L * 0.99, -r, -L);
+        // far rim, scalloped into five lobes
         for (let i = 0; i < 5; i++) {
-          const t = (i / 5) * TAU;
-          const cx = Math.cos(t) * r * 0.5;
-          const cy = Math.sin(t) * r * 0.5;
-          ctx.moveTo(cx + Math.cos(t) * r * 0.5, cy + Math.sin(t) * r * 0.5);
-          ctx.ellipse(cx, cy, r * 0.5, r * 0.32, t, 0, TAU);
+          const t0 = Math.PI + (i / 5) * Math.PI;
+          const t1 = Math.PI + ((i + 1) / 5) * Math.PI;
+          const tm = (t0 + t1) / 2;
+          ctx.quadraticCurveTo(
+            Math.cos(tm) * r * 1.12, -L + Math.sin(tm) * e * 1.25,
+            Math.cos(t1) * r, -L + Math.sin(t1) * e,
+          );
         }
+        ctx.quadraticCurveTo(1.4 * s, -L * 0.99, 1.1 * s, m);
+        ctx.closePath();
         ctx.fillStyle = P.cPetal;
         ctx.fill();
-        ctx.lineWidth = 0.6;
+        // near rim and a hint of the greenish throat
+        ctx.beginPath();
+        ctx.ellipse(0, -L, r, e, 0, 0, Math.PI);
+        ctx.lineWidth = 0.7;
         ctx.strokeStyle = P.cPetalEdge;
         ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(0, -L - e * 0.15, r * 0.22, e * 0.35, 0, 0, TAU);
+        ctx.fillStyle = P.cTube;
+        ctx.fill();
         ctx.restore();
       }
     }
